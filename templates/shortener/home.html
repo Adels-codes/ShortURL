@@ -30,6 +30,8 @@
         <div class="alert alert-success mt-4">
             <strong>Your short link:</strong>
             <a href="{{ short_link }}" target="_blank">{{ short_link }}</a>
+            <br>
+            <a href="{% url 'shortener:stats' short_url.short_code %}">View click stats &rarr;</a>
         </div>
         {% endif %}
     </div>

@@ -45,3 +45,17 @@ class ShortURL(models.Model):
     @property
     def is_usable(self):
         return self.is_active and not self.is_expired
+
+
+class Click(models.Model):
+    short_url = models.ForeignKey(ShortURL, on_delete=models.CASCADE, related_name='clicks')
+    clicked_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.CharField(max_length=512, blank=True)
+    referrer = models.CharField(max_length=512, blank=True)
+
+    class Meta:
+        ordering = ['-clicked_at']
+
+    def __str__(self):
+        return f'Click on {self.short_url.short_code} at {self.clicked_at:%Y-%m-%d %H:%M}'

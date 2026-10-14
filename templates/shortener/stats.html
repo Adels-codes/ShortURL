@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Stats for {{ short_url.short_code }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h1 class="h3">Stats for <code>{{ short_url.short_code }}</code></h1>
+        <p class="text-muted">
+            <a href="{{ short_url.original_url }}" target="_blank">{{ short_url.original_url }}</a>
+        </p>
+
+        <div class="card p-4 shadow-sm mb-4">
+            <div class="d-flex justify-content-between">
+                <span>Total clicks</span>
+                <strong>{{ total_clicks }}</strong>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span>Created</span>
+                <strong>{{ short_url.created_at }}</strong>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span>Status</span>
+                <strong>{% if short_url.is_usable %}Active{% else %}Inactive{% endif %}</strong>
+            </div>
+        </div>
+
+        <h2 class="h5">Recent clicks</h2>
+        {% if clicks %}
+        <table class="table table-sm bg-white">
+            <thead>
+                <tr><th>When</th><th>IP</th><th>Referrer</th></tr>
+            </thead>
+            <tbody>
+                {% for click in clicks %}
+                <tr>
+                    <td>{{ click.clicked_at }}</td>
+                    <td>{{ click.ip_address|default:'—' }}</td>
+                    <td>{{ click.referrer|default:'—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">No clicks yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
