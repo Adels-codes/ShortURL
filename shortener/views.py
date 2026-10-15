@@ -1,10 +1,15 @@
+from django.core.cache import cache
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.views import View
+from django_ratelimit.decorators import ratelimit
 
 from .forms import ShortenForm
-from .models import Click, ShortURL
+from .models import Click, ShortURL, shorturl_cache_key
+
+REDIRECT_CACHE_TTL = 60  # seconds; invalidated immediately on save/delete via signal
 
 
 def _client_ip(request):
@@ -14,6 +19,7 @@ def _client_ip(request):
     return request.META.get('REMOTE_ADDR')
 
 
+@method_decorator(ratelimit(key='ip', rate='10/m', method='POST', block=True), name='post')
 class HomeView(View):
     template_name = 'shortener/home.html'
 
@@ -36,7 +42,12 @@ class HomeView(View):
 
 
 def redirect_short_url(request, short_code):
-    short_url = get_object_or_404(ShortURL, short_code=short_code)
+    cache_key = shorturl_cache_key(short_code)
+    short_url = cache.get(cache_key)
+    if short_url is None:
+        short_url = get_object_or_404(ShortURL, short_code=short_code)
+        cache.set(cache_key, short_url, REDIRECT_CACHE_TTL)
+
     if not short_url.is_usable:
         raise Http404('This link is no longer active.')
 

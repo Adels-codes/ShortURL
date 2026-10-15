@@ -1,7 +1,14 @@
 import shortuuid
 from django.conf import settings
+from django.core.cache import cache
 from django.db import models
+from django.db.models.signals import post_delete, post_save
+from django.dispatch import receiver
 from django.utils import timezone
+
+
+def shorturl_cache_key(short_code):
+    return f'shorturl:{short_code}'
 
 
 def generate_short_code():
@@ -45,6 +52,12 @@ class ShortURL(models.Model):
     @property
     def is_usable(self):
         return self.is_active and not self.is_expired
+
+
+@receiver(post_save, sender='shortener.ShortURL')
+@receiver(post_delete, sender='shortener.ShortURL')
+def invalidate_shorturl_cache(sender, instance, **kwargs):
+    cache.delete(shorturl_cache_key(instance.short_code))
 
 
 class Click(models.Model):
